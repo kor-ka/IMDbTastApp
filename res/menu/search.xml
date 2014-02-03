@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/search"
+          android:title="Search"
+          android:icon="@android:drawable/ic_menu_search"
+		android:showAsAction="ifRoom"
+          android:actionViewClass="android.widget.SearchView" />
+    
+    <item android:id="@+id/bookmarks"
+          android:title="Bookmarks"
+          android:icon="@drawable/rating_important"
+          android:showAsAction="always" />
+    
+    <item android:id="@+id/lbc"
+          android:title="load by click"
+          android:icon="@drawable/rating_important"
+          android:showAsAction="never"
+          android:checkable="true" />
+    
+    
+</menu>

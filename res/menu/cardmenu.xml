@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/cardmenushare"
+		android:title="Share" />
+
+    <item android:id="@+id/cardmenubookmark"
+		android:title="Bookmark" />
+
+    <item android:id="@+id/cardmenuopeninbrowser"
+		android:title="Open in browser" />
+</menu>

@@ -1,0 +1,25 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    
+    <item
+            android:id="@+id/menu_item_share"
+            android:showAsAction="ifRoom"
+            android:title="Share"
+            android:actionProviderClass="android.widget.ShareActionProvider" />
+    
+    <item
+            android:id="@+id/openibBr"
+            android:showAsAction="ifRoom"
+            android:icon="@drawable/ic_action_location_web_site"
+            android:title="Open in browser" />
+    
+    
+    <item android:id="@+id/bookmarks"
+          android:title="Bookmarks"
+          android:icon="@drawable/rating_important"
+          android:showAsAction="always" />
+    
+
+    
+
+</menu>
