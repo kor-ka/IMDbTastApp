@@ -7,11 +7,13 @@ import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashSet;
@@ -68,6 +70,7 @@ public class FilmActivity extends Activity implements OnClickListener {
 	String imdbid;
 	Intent result;
 	Context ctx;
+	Intent i;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -85,7 +88,7 @@ public class FilmActivity extends Activity implements OnClickListener {
 		bigPoster = (ImageView) findViewById(R.id.bigPoster);
 		starr = (ImageButton) findViewById(R.id.afstarr);
 		starr.setOnClickListener(this);
-		Intent i = getIntent();
+		i = getIntent();
 		result = new Intent();
 		imdbid = i.getStringExtra("imdbid");
 		title.setText(i.getStringExtra("Title"));
@@ -108,21 +111,27 @@ public class FilmActivity extends Activity implements OnClickListener {
 				plot.setText(jObject2.getString("Plot"));
 				
 				//new DownloadImageTask(poster).execute(jObject2.getString("Poster"));
-				BitmapFactory.Options options = new BitmapFactory.Options();
-				options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-				Bitmap bitmap = BitmapFactory.decodeFile(Environment.getExternalStorageDirectory()+ "/IMDbTestApp/"+imdbid+".jpg", options);
-				poster.setImageBitmap(bitmap);
 				
-				DisplayMetrics displaymetrics = new DisplayMetrics();
-				getWindowManager().getDefaultDisplay().getMetrics(displaymetrics);
-				int height = displaymetrics.heightPixels;
-				int width = displaymetrics.widthPixels;
-				
-		        Bitmap newBitmap = Bitmap.createScaledBitmap(bitmap, width, width*bitmap.getHeight()/bitmap.getWidth(), false);
-		        
-				
-				bigPoster.setImageBitmap(newBitmap);
-				//card.getCardHeader().setTitle(jObject2.getString("Plot"));
+			
+					BitmapFactory.Options options = new BitmapFactory.Options();
+					options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+					Bitmap bitmap = BitmapFactory.decodeFile(
+							Environment.getExternalStorageDirectory()
+									+ "/IMDbTestApp/" + imdbid + ".jpg",
+							options);
+				if (bitmap!=null) {
+					poster.setImageBitmap(bitmap);
+					DisplayMetrics displaymetrics = new DisplayMetrics();
+					getWindowManager().getDefaultDisplay().getMetrics(
+							displaymetrics);
+					int height = displaymetrics.heightPixels;
+					int width = displaymetrics.widthPixels;
+					Bitmap newBitmap = Bitmap.createScaledBitmap(bitmap, width,
+							width * bitmap.getHeight() / bitmap.getWidth(),
+							false);
+					bigPoster.setImageBitmap(newBitmap);
+					//card.getCardHeader().setTitle(jObject2.getString("Plot"));
+				}
 				}
 			} catch (JSONException e) {
 				// TODO Auto-generated catch block
@@ -132,11 +141,51 @@ public class FilmActivity extends Activity implements OnClickListener {
 			if(isOnline()){
 				setFullFilmInfo(i.getStringExtra("imdbid"));
 			}else{
-				Toast.makeText(ctx, "Cant't load data. Offline.", Toast.LENGTH_SHORT).show();
-				stuff.setVisibility(View.INVISIBLE);
-				stuff2.setVisibility(View.INVISIBLE);
-				plot.setVisibility(View.INVISIBLE);
-				starr.setVisibility(View.INVISIBLE);
+				
+				String jsonString = i.getStringExtra("JSONString");
+				if(jsonString!=null){
+					 try {
+							JSONObject jObject2 = new JSONObject(jsonString);
+							stuff.setText(jObject2.getString("Country")+" | "+jObject2.getString("Released")+									
+									"\n"+jObject2.getString("Genre").replace(",", " |")+
+									"\n"+jObject2.getString("Runtime"));
+							stuff2.setText("Rating: "+jObject2.getString("imdbRating")+"/10"+
+											"\n"+"Director: "+jObject2.getString("Director")+
+											"\n"+"Writers: "+jObject2.getString("Writer")+
+											"\n"+"Type: "+jObject2.getString("Type"));
+							plot.setText(jObject2.getString("Plot"));
+							
+							
+							
+							//card.getCardHeader().setTitle(jObject2.getString("Plot"));
+						} catch (JSONException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					 BitmapFactory.Options options = new BitmapFactory.Options();
+						options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+						Bitmap bitmap = BitmapFactory.decodeFile(Environment.getExternalStorageDirectory()+ "/IMDbTestApp/old/"+imdbid+".jpg", options);
+						if(bitmap!=null){
+							poster.setImageBitmap(bitmap);
+							
+							DisplayMetrics displaymetrics = new DisplayMetrics();
+							getWindowManager().getDefaultDisplay().getMetrics(displaymetrics);
+							int height = displaymetrics.heightPixels;
+							int width = displaymetrics.widthPixels;
+							
+					        Bitmap newBitmap = Bitmap.createScaledBitmap(bitmap, width, width*bitmap.getHeight()/bitmap.getWidth(), false);
+					        
+							
+					      bigPoster.setImageBitmap(newBitmap);
+						}
+					 
+				}else{
+					Toast.makeText(ctx, "Cant't load data. Offline.", Toast.LENGTH_SHORT).show();
+					stuff.setVisibility(View.INVISIBLE);
+					stuff2.setVisibility(View.INVISIBLE);
+					plot.setVisibility(View.INVISIBLE);
+					starr.setVisibility(View.INVISIBLE);
+				}
 			}
 			
 			
@@ -319,16 +368,19 @@ public class FilmActivity extends Activity implements OnClickListener {
 		  }
 
 		  protected void onPostExecute(Bitmap result) {
-		      bmImage.setImageBitmap(result);
-		      DisplayMetrics displaymetrics = new DisplayMetrics();
-				getWindowManager().getDefaultDisplay().getMetrics(displaymetrics);
-				int height = displaymetrics.heightPixels;
-				int width = displaymetrics.widthPixels;
-				
-		        Bitmap newBitmap = Bitmap.createScaledBitmap(result, width, width*result.getHeight()/result.getWidth(), false);
-		        
-				
-		      bigPoster.setImageBitmap(newBitmap);
+			  if(result!=null){
+				  bmImage.setImageBitmap(result);
+			      DisplayMetrics displaymetrics = new DisplayMetrics();
+					getWindowManager().getDefaultDisplay().getMetrics(displaymetrics);
+					int height = displaymetrics.heightPixels;
+					int width = displaymetrics.widthPixels;
+					
+			        Bitmap newBitmap = Bitmap.createScaledBitmap(result, width, width*result.getHeight()/result.getWidth(), false);
+			        
+					
+			      bigPoster.setImageBitmap(newBitmap);
+			  }
+		      
 		  }
 		}
 
@@ -380,8 +432,46 @@ public class FilmActivity extends Activity implements OnClickListener {
 			istarred = true;
 			if(isOnline()){
 				getFullFilmInfoJsonString(imdbid);
-			}else{ Toast.makeText(ctx, "Cant't load data. Offline.", Toast.LENGTH_SHORT).show(); }
-		
+			}else{ //Toast.makeText(ctx, "Cant't load data. Offline.", Toast.LENGTH_SHORT).show(); 
+			Editor ed = starred.edit();
+            ed.putString(imdbid, i.getStringExtra("JSONString"));
+            ed.apply();
+            JSONObject json;
+				try {
+					json = new JSONObject(i.getStringExtra("JSONString"));
+				
+
+					// Copy poster		
+					
+					String passto = Environment.getExternalStorageDirectory().getAbsolutePath()+ "/IMDbTestApp";
+					String passfrom = Environment.getExternalStorageDirectory().getAbsolutePath()+ "/IMDbTestApp/old";
+					File from = new File(passfrom, imdbid + ".jpg");
+					File to = new File(passto, imdbid + ".jpg");
+											
+					try {
+						to.createNewFile();
+						InputStream in = new FileInputStream(from);
+					    OutputStream out = new FileOutputStream(to);
+
+					    // Transfer bytes from in to out
+					    byte[] buf = new byte[1024];
+					    int len;
+					    while ((len = in.read(buf)) > 0) {
+					        out.write(buf, 0, len);
+					    }
+					    in.close();
+					    out.close();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				} catch (JSONException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+        	   
+			}
+            
 			result.putExtra("isstarred", true);
 			setResult(RESULT_OK, result);
 		}
