@@ -573,6 +573,7 @@ public class Search extends Activity {
 											+ "/");
 							sendIntent.setType("text/plain");
 							startActivity(sendIntent);
+						break;
 
 						case R.id.cardmenuopeninbrowser:
 							String url = "http://www.imdb.com/title/" + idmdbid
