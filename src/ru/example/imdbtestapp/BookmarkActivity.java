@@ -233,7 +233,7 @@ public Card cardInit (Card card, String headerTitle, final String idmdbid){
 							sendIntent.putExtra(Intent.EXTRA_TEXT, "http://www.imdb.com/title/"+cardm.getParentCard().getId()+"/");
 							sendIntent.setType("text/plain");
 							startActivity(sendIntent);
-							
+							break;
 						case R.id.cardmenuopeninbrowser:
 							String url = "http://www.imdb.com/title/"+idmdbid+"/";
 							Intent oib = new Intent(Intent.ACTION_VIEW);
