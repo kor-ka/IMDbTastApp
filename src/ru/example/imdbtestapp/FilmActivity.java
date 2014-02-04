@@ -92,6 +92,7 @@ public class FilmActivity extends Activity implements OnClickListener {
 		result = new Intent();
 		imdbid = i.getStringExtra("imdbid");
 		title.setText(i.getStringExtra("Title"));
+		getActionBar().setTitle(i.getStringExtra("Title"));
 		istarred = starred.getString(imdbid, null)!=null;
 		setResult(RESULT_CANCELED, result);
 		

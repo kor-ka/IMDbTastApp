@@ -4,7 +4,7 @@
     <string name="app_name">IMDbTestApp</string>
     <string name="action_settings">Settings</string>
     <string name="hello_world">Hello world!</string>
-    <string name="title_activity_film">FilmActivity</string>
-    <string name="title_activity_bookmark">BookmarkActivity</string>
+    <string name="title_activity_film">Film</string>
+    <string name="title_activity_bookmark">Bookmarks</string>
 	<string name="serch_hint">Star Wars</string>
 </resources>

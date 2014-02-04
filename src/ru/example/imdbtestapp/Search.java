@@ -24,6 +24,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -245,32 +247,36 @@ public class Search extends Activity {
 
 			if (isOnline()) {
 				query = intent.getStringExtra(SearchManager.QUERY);
-				query = query.replaceAll(" ", "%20");
-				query = query + "*";
-				ids.clear();
-				// use the query to search your data somehow
-				cards.clear();
-				listView.removeFooterView(footerView);
-				listView.addFooterView(footerView);
-				mCardArrayAdapter.notifyDataSetChanged();
-				listViewOld.setVisibility(View.GONE);
-				tv.setVisibility(View.INVISIBLE);
-				listView.setVisibility(View.GONE);
-				tk = new TestConnection().execute();
-				nowLoading = true;
-				Set<String> newList = new HashSet<String>();
-				newList.clear();
-				Editor ed = starred.edit();
-				ed.putStringSet("old", newList);
-				ed.apply();
-				
-				File dir = new File(Environment.getExternalStorageDirectory()+"/IMDbTestApp/old");
-				if (dir.isDirectory()) {
-			        String[] children = dir.list();
-			        for (int i = 0; i < children.length; i++) {
-			            new File(dir, children[i]).delete();
-			        }
-			    }
+				if (!containsIllegals(query)) {
+					query = intent.getStringExtra(SearchManager.QUERY);
+					query = query.replaceAll(" ", "%20");
+					query = query + "*";
+					ids.clear();
+					// use the query to search your data somehow
+					cards.clear();
+					listView.removeFooterView(footerView);
+					listView.addFooterView(footerView);
+					mCardArrayAdapter.notifyDataSetChanged();
+					listViewOld.setVisibility(View.GONE);
+					tv.setVisibility(View.INVISIBLE);
+					listView.setVisibility(View.GONE);
+					tk = new TestConnection().execute();
+					nowLoading = true;
+					Set<String> newList = new HashSet<String>();
+					newList.clear();
+					Editor ed = starred.edit();
+					ed.putStringSet("old", newList);
+					ed.apply();
+					File dir = new File(
+							Environment.getExternalStorageDirectory()
+									+ "/IMDbTestApp/old");
+					if (dir.isDirectory()) {
+						String[] children = dir.list();
+						for (int i = 0; i < children.length; i++) {
+							new File(dir, children[i]).delete();
+						}
+					}
+				} else { Toast.makeText(ctx, "Please, don't use illegal characters", Toast.LENGTH_LONG).show(); }
 
 			} else {
 				Toast.makeText(ctx, "Cant't load data. Offline.",
@@ -985,6 +991,12 @@ public class Search extends Activity {
 	    	}
 	    	
 	    }
+	}
+	
+	public boolean containsIllegals(String toExamine) {
+	    Pattern pattern = Pattern.compile("[~#@*%+{}<>\\[\\]|\"\\_^\\\\]");
+	    Matcher matcher = pattern.matcher(toExamine);
+	    return matcher.find();
 	}
 
 }
