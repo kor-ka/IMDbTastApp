@@ -194,7 +194,7 @@ public class FilmActivity extends Activity implements OnClickListener {
 		
 		
 		if(istarred){
-			starr.setBackgroundResource(R.drawable.star_on);
+			starr.setBackgroundResource(R.drawable.star_on_blue);
 			
 		}
 		
@@ -421,7 +421,7 @@ public class FilmActivity extends Activity implements OnClickListener {
 			}
 			
 			
-			starr.setBackgroundResource(R.drawable.star_on);
+			starr.setBackgroundResource(R.drawable.star_on_blue);
 			istarred = true;
 			if(isOnline()){
 				getFullFilmInfoJsonString(imdbid);

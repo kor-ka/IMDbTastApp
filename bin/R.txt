@@ -81,11 +81,12 @@ int drawable rating_important 0x7f020017
 int drawable rating_not_important 0x7f020018
 int drawable star_off 0x7f020019
 int drawable star_on 0x7f02001a
-int drawable undobar 0x7f02001b
-int drawable undobar_button_focused 0x7f02001c
-int drawable undobar_button_pressed 0x7f02001d
-int drawable undobar_divider 0x7f02001e
-int drawable vaio 0x7f02001f
+int drawable star_on_blue 0x7f02001b
+int drawable undobar 0x7f02001c
+int drawable undobar_button_focused 0x7f02001d
+int drawable undobar_button_pressed 0x7f02001e
+int drawable undobar_divider 0x7f02001f
+int drawable vaio 0x7f020020
 int id FilmList 0x7f0c0000
 int id FilmListOld 0x7f0c0010
 int id add 0x7f0c000c

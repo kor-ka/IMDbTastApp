@@ -154,11 +154,12 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int rating_not_important=0x7f020018;
         public static final int star_off=0x7f020019;
         public static final int star_on=0x7f02001a;
-        public static final int undobar=0x7f02001b;
-        public static final int undobar_button_focused=0x7f02001c;
-        public static final int undobar_button_pressed=0x7f02001d;
-        public static final int undobar_divider=0x7f02001e;
-        public static final int vaio=0x7f02001f;
+        public static final int star_on_blue=0x7f02001b;
+        public static final int undobar=0x7f02001c;
+        public static final int undobar_button_focused=0x7f02001d;
+        public static final int undobar_button_pressed=0x7f02001e;
+        public static final int undobar_divider=0x7f02001f;
+        public static final int vaio=0x7f020020;
     }
     public static final class id {
         public static final int FilmList=0x7f0c0000;
