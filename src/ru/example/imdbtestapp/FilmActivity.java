@@ -378,6 +378,7 @@ public class FilmActivity extends Activity implements OnClickListener {
 
 	@Override
 	public void onClick(View v) {
+		istarred = starred.getString(imdbid, null)!=null;
 		if(istarred){
 			Set<String> ss = starred.getStringSet("starred", new HashSet<String>());
 			Set<String> newList = new HashSet<String>();

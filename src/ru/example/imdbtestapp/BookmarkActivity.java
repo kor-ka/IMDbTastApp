@@ -2,6 +2,7 @@ package ru.example.imdbtestapp;
 
 import it.gmariotti.cardslib.library.internal.Card;
 import it.gmariotti.cardslib.library.internal.CardArrayAdapter;
+import it.gmariotti.cardslib.library.internal.CardExpand;
 import it.gmariotti.cardslib.library.internal.CardHeader;
 import it.gmariotti.cardslib.library.internal.CardThumbnail;
 import it.gmariotti.cardslib.library.internal.base.BaseCard;
@@ -85,6 +86,10 @@ public class BookmarkActivity extends Activity {
 						final String imdbid = jObject.getString("imdbID");
 						final String title = jObject.getString("Title");
 						cardInit(newCard, title, imdbid);
+						CardExpand cardex = new CardExpand(ctx);
+						cardex.setTitle(JsonString);
+						newCard.addCardExpand(cardex);
+						final String JsonToIntent = JsonString;
 						//newCard.getCardThumbnail().setDrawableResource(R.drawable.ic_launcher);
 						newCard.setTitle(jObject.getString("Country") + " | "
 								+ jObject.getString("Year") + "\n"
@@ -98,6 +103,7 @@ public class BookmarkActivity extends Activity {
 								intent.putExtra("imdbid", imdbid);
 								intent.putExtra("Title", title);
 								intent.putExtra("isstarred", card.isStarred());
+								intent.putExtra("JSONString", JsonToIntent);
 								cardToChange = card;
 								//ctx.startActivity (intent);
 								startActivityForResult(intent, 1);
