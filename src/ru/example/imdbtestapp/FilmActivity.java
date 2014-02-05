@@ -111,8 +111,7 @@ public class FilmActivity extends Activity implements OnClickListener {
 								"\n"+"Type: "+jObject2.getString("Type"));
 				plot.setText(jObject2.getString("Plot"));
 				
-				//new DownloadImageTask(poster).execute(jObject2.getString("Poster"));
-				
+			
 			
 					BitmapFactory.Options options = new BitmapFactory.Options();
 					options.inPreferredConfig = Bitmap.Config.ARGB_8888;
@@ -131,7 +130,7 @@ public class FilmActivity extends Activity implements OnClickListener {
 							width * bitmap.getHeight() / bitmap.getWidth(),
 							false);
 					bigPoster.setImageBitmap(newBitmap);
-					//card.getCardHeader().setTitle(jObject2.getString("Plot"));
+				
 				}
 				}
 			} catch (JSONException e) {
@@ -158,7 +157,7 @@ public class FilmActivity extends Activity implements OnClickListener {
 							
 							
 							
-							//card.getCardHeader().setTitle(jObject2.getString("Plot"));
+						
 						} catch (JSONException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
@@ -242,13 +241,7 @@ public class FilmActivity extends Activity implements OnClickListener {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case android.R.id.home:
-			// This ID represents the Home or Up button. In the case of this
-			// activity, the Up button is shown. Use NavUtils to allow users
-			// to navigate up one level in the application structure. For
-			// more details, see the Navigation pattern on Android Design:
-			//
-			// http://developer.android.com/design/patterns/navigation.html#up-vs-back
-			//
+			
 			NavUtils.navigateUpFromSameTask(this);
 			return true;
 		case R.id.bookmarks:
@@ -281,8 +274,6 @@ public class FilmActivity extends Activity implements OnClickListener {
 
            	HttpClient   httpclient2 = new DefaultHttpClient();
        		HttpPost httppost2 = new HttpPost("http://www.omdbapi.com/?i="+imdbid);
-       		// Depends on your web service
-       		//httppost2.setHeader("Content-type", "application/json");
        		
        		InputStream inputStream2 = null;
        		
@@ -291,7 +282,7 @@ public class FilmActivity extends Activity implements OnClickListener {
        		    HttpEntity entity2 = response2.getEntity();
 
        		    inputStream2 = entity2.getContent();
-       		    // json is UTF-8 by default
+       		  
        		    BufferedReader reader2 = new BufferedReader(new InputStreamReader(inputStream2, "UTF-8"), 8);
        		    StringBuilder sb2 = new StringBuilder();
 
@@ -317,7 +308,7 @@ public class FilmActivity extends Activity implements OnClickListener {
            
            protected void onPostExecute(String result) {
            
-                      // card.getCardHeader().setTitle(result2);
+                      
                        
                        try {
 							JSONObject jObject2 = new JSONObject(result2);
@@ -332,7 +323,7 @@ public class FilmActivity extends Activity implements OnClickListener {
 							
 							new DownloadImageTask(poster).execute(jObject2.getString("Poster"));
 							
-							//card.getCardHeader().setTitle(jObject2.getString("Plot"));
+							
 						} catch (JSONException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
@@ -488,9 +479,7 @@ public class FilmActivity extends Activity implements OnClickListener {
        
            	HttpClient   httpclient2 = new DefaultHttpClient();
        		HttpPost httppost2 = new HttpPost("http://www.omdbapi.com/?i="+imdbid);
-       		// Depends on your web service
-       		//httppost2.setHeader("Content-type", "application/json");
-       		
+       	
        		InputStream inputStream2 = null;
        		
        		try {
@@ -498,7 +487,7 @@ public class FilmActivity extends Activity implements OnClickListener {
        		    HttpEntity entity2 = response2.getEntity();
 
        		    inputStream2 = entity2.getContent();
-       		    // json is UTF-8 by default
+       		    
        		    BufferedReader reader2 = new BufferedReader(new InputStreamReader(inputStream2, "UTF-8"), 8);
        		    StringBuilder sb2 = new StringBuilder();
 
@@ -578,7 +567,7 @@ public class FilmActivity extends Activity implements OnClickListener {
 				bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
 				
 
-				//you can create a new file name "test.jpg" in sdcard folder.
+			
 				File exportDir = new File(Environment.getExternalStorageDirectory(), "IMDbTestApp");
 
         		if (!exportDir.exists()) { exportDir.mkdirs(); }
@@ -589,14 +578,14 @@ public class FilmActivity extends Activity implements OnClickListener {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				//write the bytes in file
+			
 				FileOutputStream fo;
 				try {
 					fo = new FileOutputStream(f);
 				
 				fo.write(bytes.toByteArray());
 
-				// remember close de FileOutput
+			
 				fo.close();
 				} catch (FileNotFoundException e) {
 					// TODO Auto-generated catch block
