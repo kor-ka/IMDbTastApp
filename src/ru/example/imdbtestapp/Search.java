@@ -48,6 +48,7 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Point;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -55,7 +56,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
-import android.util.Log;
+import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -301,7 +302,11 @@ public class Search extends Activity {
 		SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
 		searchView = (SearchView) menu.findItem(R.id.search).getActionView();
 		searchView2.setIconifiedByDefault(false);
-		searchView2.setMaxWidth(500);
+		Display display = getWindowManager().getDefaultDisplay();
+		Point size = new Point();
+		display.getSize(size);
+		int scrWidth = size.x;		
+		searchView2.setMaxWidth(scrWidth/3*2);
 		searchView.setSearchableInfo(searchManager
 				.getSearchableInfo(getComponentName()));
 
