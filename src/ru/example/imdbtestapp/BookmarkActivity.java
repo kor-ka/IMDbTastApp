@@ -121,9 +121,7 @@ public class BookmarkActivity extends Activity {
 		
 	}
 
-	/**
-	 * Set up the {@link android.app.ActionBar}.
-	 */
+
 	private void setupActionBar() {
 
 		getActionBar().setDisplayHomeAsUpEnabled(true);
@@ -132,7 +130,7 @@ public class BookmarkActivity extends Activity {
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
+		
 		getMenuInflater().inflate(R.menu.bookmark, menu);
 		return true;
 	}
@@ -141,13 +139,7 @@ public class BookmarkActivity extends Activity {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case android.R.id.home:
-			// This ID represents the Home or Up button. In the case of this
-			// activity, the Up button is shown. Use NavUtils to allow users
-			// to navigate up one level in the application structure. For
-			// more details, see the Navigation pattern on Android Design:
-			//
-			// http://developer.android.com/design/patterns/navigation.html#up-vs-back
-			//
+		
 			NavUtils.navigateUpFromSameTask(this);
 			return true;
 		}
@@ -250,7 +242,7 @@ public Card cardInit (Card card, String headerTitle, final String idmdbid){
 		card.addCardThumbnail(thumb);
 		
 		card.setClickable(true);
-		// Set onClick listener
+	
 		card.setOnClickListener(new Card.OnCardClickListener() {
 			@Override
 			public void onClick(Card card, View v) {
