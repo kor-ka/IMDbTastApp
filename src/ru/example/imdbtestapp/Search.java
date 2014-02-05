@@ -373,9 +373,7 @@ public class Search extends Activity {
 
 		@Override
 		protected String doInBackground(String... params) {
-			Log.d(TAG,
-					"������� ������� �������");
-			publishProgress(new Void[] {});
+		publishProgress(new Void[] {});
 
 			DefaultHttpClient httpclient = new DefaultHttpClient(
 					new BasicHttpParams());
@@ -744,23 +742,19 @@ public class Search extends Activity {
 							intent.putExtra("isstarred", card.isStarred());
 							intent.putExtra("JSONString", card.getCardExpand().getTitle());
 							cardToChange = card;
-							// ctx.startActivity (intent);
+						
 							startActivityForResult(intent, 1);
 						}
 					});
-					// jObjectfilinfo= new JSONObject(getFilmInfo(imdbid));
-					// newCard.getParentCard().setTitle(jObjectfilinfo.getString("Year"));
-
-					// sdsssssssssssssssssssssssssssssssssssssssss
-					// sdsssssssssssssssssssssssssssssssssssssssss
+				
 					cards.add(newCard);
 
 					mCardArrayAdapter.notifyDataSetChanged();
 					Set<String> ss = starred.getStringSet("starred",
 							new HashSet<String>());
 					if (ss.contains(imdbid)) {
-						// Toast.makeText(ctx, "" , Toast.LENGTH_SHORT).show();
-						// newCard.getCardView().setStarred(true);
+					
+					
 						newCard.setStarred(true);
 					}
 					if (isOnline()) {
@@ -786,16 +780,16 @@ public class Search extends Activity {
 									Toast.LENGTH_SHORT).show();
 						}
 
-						// mCardArrayAdapter.notifyDataSetChanged();
-						// Toast.makeText(getBaseContext(), "Stop!",
-						// Toast.LENGTH_LONG).show();
+					
+					
 					}
 				} catch (JSONException e) {
 					// Oops
 				}
 			}
 		} catch (JSONException e1) {
-			// TODO Auto-generated catch block
+		
+		
 			e1.printStackTrace();
 		}
 
@@ -820,9 +814,8 @@ public class Search extends Activity {
 				HttpClient httpclient2 = new DefaultHttpClient();
 				HttpPost httppost2 = new HttpPost("http://www.omdbapi.com/?i="
 						+ imdbid);
-				// Depends on your web service
-				// httppost2.setHeader("Content-type", "application/json");
-
+			
+			
 				InputStream inputStream2 = null;
 
 				try {
@@ -830,7 +823,8 @@ public class Search extends Activity {
 					HttpEntity entity2 = response2.getEntity();
 
 					inputStream2 = entity2.getContent();
-					// json is UTF-8 by default
+				
+				
 					BufferedReader reader2 = new BufferedReader(
 							new InputStreamReader(inputStream2, "UTF-8"), 8);
 					StringBuilder sb2 = new StringBuilder();
@@ -868,7 +862,8 @@ public class Search extends Activity {
 					String url = json.getString("Poster");
 					SaveBmp(url, imdbid, false);
 				} catch (JSONException e) {
-					// TODO Auto-generated catch block
+					
+					
 					e.printStackTrace();
 				}
 
@@ -910,7 +905,8 @@ public class Search extends Activity {
 				ByteArrayOutputStream bytes = new ByteArrayOutputStream();
 				if (bitmap!=null) {
 					bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
-					// you can create a new file name "test.jpg" in sdcard folder.
+					
+					
 					String pass;
 					String name;
 					if (isOld) {
@@ -935,14 +931,15 @@ public class Search extends Activity {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
-					// write the bytes in file
+					
 					FileOutputStream fo;
 					try {
 						fo = new FileOutputStream(f);
 
 						fo.write(bytes.toByteArray());
 
-						// remember close de FileOutput
+					
+					
 						fo.close();
 					} catch (FileNotFoundException e) {
 						// TODO Auto-generated catch block
