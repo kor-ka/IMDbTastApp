@@ -310,24 +310,33 @@ public class FilmActivity extends Activity implements OnClickListener {
            
                       
                        
-                       try {
+                       if (result!=null) {
+						try {
 							JSONObject jObject2 = new JSONObject(result2);
-							stuff.setText(jObject2.getString("Country")+" | "+jObject2.getString("Released")+									
-									"\n"+jObject2.getString("Genre").replace(",", " |")+
-									"\n"+jObject2.getString("Runtime"));
-							stuff2.setText("Rating: "+jObject2.getString("imdbRating")+"/10"+
-											"\n"+"Director: "+jObject2.getString("Director")+
-											"\n"+"Writers: "+jObject2.getString("Writer")+
-											"\n"+"Type: "+jObject2.getString("Type"));
+							stuff.setText(jObject2.getString("Country")
+									+ " | "
+									+ jObject2.getString("Released")
+									+ "\n"
+									+ jObject2.getString("Genre").replace(",",
+											" |") + "\n"
+									+ jObject2.getString("Runtime"));
+							stuff2.setText("Rating: "
+									+ jObject2.getString("imdbRating") + "/10"
+									+ "\n" + "Director: "
+									+ jObject2.getString("Director") + "\n"
+									+ "Writers: "
+									+ jObject2.getString("Writer") + "\n"
+									+ "Type: " + jObject2.getString("Type"));
 							plot.setText(jObject2.getString("Plot"));
-							
-							new DownloadImageTask(poster).execute(jObject2.getString("Poster"));
-							
-							
+
+							new DownloadImageTask(poster).execute(jObject2
+									.getString("Poster"));
+
 						} catch (JSONException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
+					}
                        
                 
                       };
@@ -565,35 +574,35 @@ public class FilmActivity extends Activity implements OnClickListener {
 			@Override
 			protected void onPostExecute(String result) {
 				ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-				bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
-				
+				if (bitmap!=null) {
+					bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
+					File exportDir = new File(
+							Environment.getExternalStorageDirectory(),
+							"IMDbTestApp");
+					if (!exportDir.exists()) {
+						exportDir.mkdirs();
+					}
+					File f = new File(exportDir, id + ".jpg");
+					try {
+						f.createNewFile();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					FileOutputStream fo;
+					try {
+						fo = new FileOutputStream(f);
 
-			
-				File exportDir = new File(Environment.getExternalStorageDirectory(), "IMDbTestApp");
+						fo.write(bytes.toByteArray());
 
-        		if (!exportDir.exists()) { exportDir.mkdirs(); }
-				File f = new File(exportDir,id +".jpg");
-				try {
-					f.createNewFile();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			
-				FileOutputStream fo;
-				try {
-					fo = new FileOutputStream(f);
-				
-				fo.write(bytes.toByteArray());
-
-			
-				fo.close();
-				} catch (FileNotFoundException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+						fo.close();
+					} catch (FileNotFoundException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 			}
 		}
