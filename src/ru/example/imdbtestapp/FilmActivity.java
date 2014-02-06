@@ -310,7 +310,7 @@ public class FilmActivity extends Activity implements OnClickListener {
            
                       
                        
-                       if (result!=null) {
+                       if (result2!=null) {
 						try {
 							JSONObject jObject2 = new JSONObject(result2);
 							stuff.setText(jObject2.getString("Country")
