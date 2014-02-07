@@ -735,7 +735,7 @@ public class Search extends Activity {
 		;
 		
 		
- 		asyncTasks.add(new Actsff().execute());
+ 		asyncTasks.add(new Actsff().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR));
 
 	}
 
@@ -915,7 +915,7 @@ public class Search extends Activity {
 		}
 		;
 		
-		asyncTasks.add(new Act().execute());
+		asyncTasks.add(new Act().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR));
 		
 
 	}
@@ -997,7 +997,7 @@ public class Search extends Activity {
 			}
 		}
 		
-		asyncTasks.add(new SaveBmp().execute());
+		asyncTasks.add(new SaveBmp().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR));
 		
 		
 	}

@@ -342,7 +342,7 @@ public class FilmActivity extends Activity implements OnClickListener {
                       };
        };
        
-       new Act().execute();
+       new Act().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 		
 		
 		
@@ -540,7 +540,7 @@ public class FilmActivity extends Activity implements OnClickListener {
                       };
        };
        
-       new Act().execute();
+       new Act().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 		
 		
 		
@@ -607,7 +607,7 @@ public class FilmActivity extends Activity implements OnClickListener {
 			}
 		}
 		
-		new SaveBmp().execute();
+		new SaveBmp().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
 	}
 	
