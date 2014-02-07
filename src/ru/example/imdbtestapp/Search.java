@@ -33,6 +33,8 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -94,6 +96,7 @@ public class Search extends Activity {
 	Context ctx;
 	SharedPreferences starred;
 	Card cardToChange;
+	ArrayList<AsyncTask> asyncTasks;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -109,7 +112,7 @@ public class Search extends Activity {
 		ctx = this;
 		oldcards = new ArrayList<Card>();
 		cards = new ArrayList<Card>();
-
+		asyncTasks = new ArrayList<AsyncTask>();
 		mCardArrayAdapter = new CardArrayAdapter(this, cards);
 		oldCardArrayAdapter = new CardArrayAdapter(this, oldcards);
 
@@ -261,7 +264,17 @@ public class Search extends Activity {
 					listViewOld.setVisibility(View.GONE);
 					tv.setVisibility(View.INVISIBLE);
 					listView.setVisibility(View.GONE);
-					tk = new TestConnection().execute();
+					if (asyncTasks!=null) {
+						for (AsyncTask atClose : asyncTasks) {
+							if (atClose != null) {
+								atClose.cancel(true);
+								
+							}
+						}
+					}
+					tk = new TestConnection().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+					
+					
 					nowLoading = true;
 					Set<String> newList = new HashSet<String>();
 					newList.clear();
@@ -346,6 +359,7 @@ public class Search extends Activity {
 
 		ProgressDialog progress = null;
 
+		
 		switch (dialogId) {
 
 		case PROGRESS_DLG_ID:
@@ -379,9 +393,15 @@ public class Search extends Activity {
 		@Override
 		protected String doInBackground(String... params) {
 		publishProgress(new Void[] {});
+		
+		
 
+		HttpParams httpParams = new BasicHttpParams();
+		HttpConnectionParams.setConnectionTimeout(httpParams, 7000);
+		HttpConnectionParams.setSoTimeout(httpParams, 7000);
 			DefaultHttpClient httpclient = new DefaultHttpClient(
-					new BasicHttpParams());
+					httpParams);
+			
 			HttpPost httppost = new HttpPost("http://www.omdbapi.com/?s="
 					+ query + "*");
 			// Depends on your web service
@@ -390,9 +410,11 @@ public class Search extends Activity {
 			InputStream inputStream = null;
 
 			try {
+				
+				
 				HttpResponse response = httpclient.execute(httppost);
 				HttpEntity entity = response.getEntity();
-
+				
 				inputStream = entity.getContent();
 				// json is UTF-8 by default
 				BufferedReader reader = new BufferedReader(
@@ -406,8 +428,10 @@ public class Search extends Activity {
 				resultJSON = sb.toString();
 
 			} catch (Exception e) {
-				// Oops
-			} finally {
+				this.cancel(true);
+				//Toast.makeText(ctx, "Connection time out", Toast.LENGTH_LONG).show();
+			} 
+			finally {
 				try {
 					if (inputStream != null)
 						inputStream.close();
@@ -445,6 +469,20 @@ public class Search extends Activity {
 			searchView.clearFocus();
 
 		}
+		private Boolean result;
+		 @Override
+		  protected void onCancelled() {
+		    handleOnCancelled(this.result);
+		 }
+		
+	
+		  
+		  private void handleOnCancelled(Boolean result) {
+			  searchView.clearFocus();
+			  Toast.makeText(ctx, "Cant't load data. Connection time out.",
+						Toast.LENGTH_SHORT).show();
+			  dismissDialog(PROGRESS_DLG_ID);
+		  }
 
 	}
 
@@ -606,7 +644,7 @@ public class Search extends Activity {
 
 	void setFullFilmInfo(final Card card, final String imdbid) {
 		nowLoading = true;
-		class Act extends AsyncTask<String, Void, String> {
+		class Actsff extends AsyncTask<String, Void, String> {
 			String result2 = null;
 
 			@Override
@@ -695,8 +733,9 @@ public class Search extends Activity {
 			};
 		}
 		;
-
-		new Act().execute();
+		
+		
+ 		asyncTasks.add(new Actsff().execute());
 
 	}
 
@@ -875,8 +914,9 @@ public class Search extends Activity {
 			};
 		}
 		;
-
-		new Act().execute();
+		
+		asyncTasks.add(new Act().execute());
+		
 
 	}
 
@@ -956,9 +996,10 @@ public class Search extends Activity {
 				}
 			}
 		}
-
-		new SaveBmp().execute();
-
+		
+		asyncTasks.add(new SaveBmp().execute());
+		
+		
 	}
 
 	public boolean isOnline() {
