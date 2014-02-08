@@ -94,7 +94,9 @@ public class FilmActivity extends Activity implements OnClickListener {
 		title.setText(i.getStringExtra("Title"));
 		getActionBar().setTitle(i.getStringExtra("Title"));
 		istarred = starred.getString(imdbid, null)!=null;
-		setResult(RESULT_CANCELED, result);
+		
+		result.putExtra("isstarred", istarred);		
+		setResult(RESULT_OK, result);
 		
 		if(istarred){
 			try {
@@ -115,8 +117,9 @@ public class FilmActivity extends Activity implements OnClickListener {
 			
 					BitmapFactory.Options options = new BitmapFactory.Options();
 					options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+					
 					Bitmap bitmap = BitmapFactory.decodeFile(
-							Environment.getExternalStorageDirectory()
+							getFilesDir()
 									+ "/IMDbTestApp/" + imdbid + ".jpg",
 							options);
 				if (bitmap!=null) {
@@ -164,7 +167,7 @@ public class FilmActivity extends Activity implements OnClickListener {
 						}
 					 BitmapFactory.Options options = new BitmapFactory.Options();
 						options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-						Bitmap bitmap = BitmapFactory.decodeFile(Environment.getExternalStorageDirectory()+ "/IMDbTestApp/old/"+imdbid+".jpg", options);
+						Bitmap bitmap = BitmapFactory.decodeFile(getFilesDir()+ "/IMDbTestApp/old/"+imdbid+".jpg", options);
 						if(bitmap!=null){
 							poster.setImageBitmap(bitmap);
 							
@@ -241,8 +244,12 @@ public class FilmActivity extends Activity implements OnClickListener {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case android.R.id.home:
+			istarred = starred.getString(imdbid, null)!=null;
+			result.putExtra("isstarred", istarred);
 			
-			NavUtils.navigateUpFromSameTask(this);
+			setResult(RESULT_OK, result);
+			finish();
+			//NavUtils.navigateUpFromSameTask(this);
 			return true;
 		case R.id.bookmarks:
 			Intent i = new Intent(getBaseContext(), BookmarkActivity.class);
@@ -259,7 +266,8 @@ public class FilmActivity extends Activity implements OnClickListener {
 			startActivity(sendIntent);
 			
 			break;
-			
+		
+		
 
 		}
 		return super.onOptionsItemSelected(item);
@@ -295,10 +303,11 @@ public class FilmActivity extends Activity implements OnClickListener {
        		    
        		} catch (Exception e) { 
        		    // Oops
+       			e.printStackTrace();
        			Toast.makeText(getBaseContext(), "Ooops"+e.getMessage(), Toast.LENGTH_LONG).show();
        		}
        		finally {
-       		    try{if(inputStream2 != null)inputStream2.close();}catch(Exception squish){}
+       		    try{if(inputStream2 != null)inputStream2.close();}catch(Exception squish){squish.printStackTrace();}
        		}
 
 
@@ -362,7 +371,6 @@ public class FilmActivity extends Activity implements OnClickListener {
 		        InputStream in = new java.net.URL(urldisplay).openStream();
 		        mIcon11 = BitmapFactory.decodeStream(in);
 		      } catch (Exception e) {
-		          Log.e("Error", e.getMessage());
 		          e.printStackTrace();
 		      }
 		      return mIcon11;
@@ -445,8 +453,8 @@ public class FilmActivity extends Activity implements OnClickListener {
 
 					// Copy poster		
 					
-					String passto = Environment.getExternalStorageDirectory().getAbsolutePath()+ "/IMDbTestApp";
-					String passfrom = Environment.getExternalStorageDirectory().getAbsolutePath()+ "/IMDbTestApp/old";
+					String passto = getFilesDir().getAbsolutePath()+ "/IMDbTestApp";
+					String passfrom = getFilesDir().getAbsolutePath()+ "/IMDbTestApp/old";
 					File from = new File(passfrom, imdbid + ".jpg");
 					File to = new File(passto, imdbid + ".jpg");
 											
@@ -510,10 +518,11 @@ public class FilmActivity extends Activity implements OnClickListener {
        		    
        		} catch (Exception e) { 
        		    // Oops
+       			e.printStackTrace();
        			Toast.makeText(getBaseContext(), "Ooops"+e.getMessage(), Toast.LENGTH_LONG).show();
        		}
        		finally {
-       		    try{if(inputStream2 != null)inputStream2.close();}catch(Exception squish){}
+       		    try{if(inputStream2 != null)inputStream2.close();}catch(Exception squish){squish.printStackTrace();}
        		}
 
 
@@ -577,7 +586,7 @@ public class FilmActivity extends Activity implements OnClickListener {
 				if (bitmap!=null) {
 					bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
 					File exportDir = new File(
-							Environment.getExternalStorageDirectory(),
+							getFilesDir(),
 							"IMDbTestApp");
 					if (!exportDir.exists()) {
 						exportDir.mkdirs();

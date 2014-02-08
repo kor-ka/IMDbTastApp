@@ -97,12 +97,17 @@ public class Search extends Activity {
 	SharedPreferences starred;
 	Card cardToChange;
 	ArrayList<AsyncTask> asyncTasks;
+	int lastMore;
+	int tkcount;
+	int handlecount;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_search);
 		handleIntent(getIntent());
+		tkcount = 1;
+		handlecount =1;
 		starred = PreferenceManager
 				.getDefaultSharedPreferences(getApplicationContext());
 		tv = (TextView) findViewById(R.id.tv);
@@ -118,8 +123,7 @@ public class Search extends Activity {
 
 		listView = (CardListView) findViewById(R.id.FilmList);
 		listViewOld = (CardListView) findViewById(R.id.FilmListOld);
-		// add the footer before adding the adapter, else the footer will not
-		// load!
+		
 		footerView = ((LayoutInflater) this
 				.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(
 				R.layout.listviewfooter, null, false);
@@ -129,6 +133,8 @@ public class Search extends Activity {
 			public void onClick(View v) {
 				if (isOnline()) {
 					loadSet();
+					Toast.makeText(ctx, "LS onClick",
+							Toast.LENGTH_SHORT).show();
 				} else {
 					Toast.makeText(ctx, "Cant't load data. Offline.",
 							Toast.LENGTH_SHORT).show();
@@ -170,6 +176,8 @@ public class Search extends Activity {
 
 						if (isOnline()) {
 							loadSet();
+							Toast.makeText(ctx, "LS auto",
+									Toast.LENGTH_SHORT).show();
 						} else {
 							Toast.makeText(ctx, "Cant't load data. Offline.",
 									Toast.LENGTH_SHORT).show();
@@ -244,10 +252,8 @@ public class Search extends Activity {
 	}
 
 	private void handleIntent(Intent intent) {
-
+		
 		if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
-
-			// Clear old
 
 			if (isOnline()) {
 				query = intent.getStringExtra(SearchManager.QUERY);
@@ -272,8 +278,6 @@ public class Search extends Activity {
 							}
 						}
 					}
-					tk = new TestConnection().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-					
 					
 					nowLoading = true;
 					Set<String> newList = new HashSet<String>();
@@ -282,7 +286,7 @@ public class Search extends Activity {
 					ed.putStringSet("old", newList);
 					ed.apply();
 					File dir = new File(
-							Environment.getExternalStorageDirectory()
+							getFilesDir()
 									+ "/IMDbTestApp/old");
 					if (dir.isDirectory()) {
 						String[] children = dir.list();
@@ -290,6 +294,15 @@ public class Search extends Activity {
 							new File(dir, children[i]).delete();
 						}
 					}
+					
+					if (tk==null) {
+						tk = new TestConnection()
+								.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+						Toast.makeText(ctx, "new tk" + tkcount,
+								Toast.LENGTH_LONG).show();
+						tkcount++;
+					}
+					
 				} else { Toast.makeText(ctx, "Please, don't use illegal characters", Toast.LENGTH_LONG).show(); }
 
 			} else {
@@ -303,6 +316,8 @@ public class Search extends Activity {
 	@Override
 	protected void onNewIntent(Intent intent) {
 		handleIntent(intent);
+		Toast.makeText(ctx, "handle intent"+handlecount, Toast.LENGTH_LONG).show();
+		handlecount++;
 	}
 
 	@Override
@@ -395,7 +410,6 @@ public class Search extends Activity {
 		publishProgress(new Void[] {});
 		
 		
-
 		HttpParams httpParams = new BasicHttpParams();
 		HttpConnectionParams.setConnectionTimeout(httpParams, 7000);
 		HttpConnectionParams.setSoTimeout(httpParams, 7000);
@@ -428,6 +442,7 @@ public class Search extends Activity {
 				resultJSON = sb.toString();
 
 			} catch (Exception e) {
+				e.printStackTrace();
 				this.cancel(true);
 				//Toast.makeText(ctx, "Connection time out", Toast.LENGTH_LONG).show();
 			} 
@@ -436,6 +451,7 @@ public class Search extends Activity {
 					if (inputStream != null)
 						inputStream.close();
 				} catch (Exception squish) {
+					squish.printStackTrace();
 				}
 			}
 
@@ -460,7 +476,11 @@ public class Search extends Activity {
 
 			lastAdded = -1;
 			if (isOnline()) {
+				//Strange bug - this part called 2 times
 				loadSet();
+				Toast.makeText(ctx, "LS from tk",
+						Toast.LENGTH_SHORT).show();
+				tk=null;
 			} else {
 				Toast.makeText(ctx, "Cant't load data. Offline.",
 						Toast.LENGTH_SHORT).show();
@@ -482,6 +502,7 @@ public class Search extends Activity {
 			  Toast.makeText(ctx, "Cant't load data. Connection time out.",
 						Toast.LENGTH_SHORT).show();
 			  dismissDialog(PROGRESS_DLG_ID);
+			  tk=null;
 		  }
 
 	}
@@ -500,7 +521,7 @@ public class Search extends Activity {
 		if(initOld){
 			BitmapFactory.Options options = new BitmapFactory.Options();
 			options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-			Bitmap bitmap = BitmapFactory.decodeFile(Environment.getExternalStorageDirectory()+ "/IMDbTestApp/old/"+idmdbid+".jpg", options);
+			Bitmap bitmap = BitmapFactory.decodeFile(getFilesDir()+ "/IMDbTestApp/old/"+idmdbid+".jpg", options);
 			
 			thumb = new MyThumbnail(getBaseContext(),bitmap);
 			thumb.setExternalUsage(true);
@@ -555,8 +576,8 @@ public class Search extends Activity {
 										ed.apply();
 									// Copy poster		
 										
-										String passto = Environment.getExternalStorageDirectory().getAbsolutePath()+ "/IMDbTestApp";
-										String passfrom = Environment.getExternalStorageDirectory().getAbsolutePath()+ "/IMDbTestApp/old";
+										String passto = getFilesDir().getAbsolutePath()+ "/IMDbTestApp";
+										String passfrom = getFilesDir().getAbsolutePath()+ "/IMDbTestApp/old";
 										File from = new File(passfrom, cardm.getParentCard().getId() + ".jpg");
 										File to = new File(passto, cardm.getParentCard().getId() + ".jpg");
 																
@@ -675,6 +696,8 @@ public class Search extends Activity {
 					result2 = sb2.toString();
 
 				} catch (Exception e) {
+					e.printStackTrace();
+					
 					// Oops
 					
 				} finally {
@@ -682,6 +705,7 @@ public class Search extends Activity {
 						if (inputStream2 != null)
 							inputStream2.close();
 					} catch (Exception squish) {
+						squish.printStackTrace();
 					}
 				}
 
@@ -763,9 +787,11 @@ public class Search extends Activity {
 			jObject = new JSONObject(resultJSON);
 
 			JSONArray jArray = jObject.getJSONArray("Search");
-			int lastMore = lastAdded + 1;
+			lastMore = lastAdded + 1;
+			int iCheck=lastMore;
 			for (int i = lastMore; i < jArray.length() & (i - lastMore) < 3; i++) {
 				try {
+					
 					JSONObject oneObject = jArray.getJSONObject(i);
 					// Pulling items from the array
 					final String title = oneObject.getString("Title");
@@ -807,7 +833,8 @@ public class Search extends Activity {
 						Toast.makeText(ctx, "Cant't load data. Offline.",
 								Toast.LENGTH_SHORT).show();
 					}
-
+					Toast.makeText(ctx, "add card "+i,
+							Toast.LENGTH_SHORT).show();
 					lastAdded = i;
 
 					if (lastAdded + 1 >= jArray.length()) {
@@ -829,6 +856,7 @@ public class Search extends Activity {
 					}
 				} catch (JSONException e) {
 					// Oops
+					e.printStackTrace();
 				}
 			}
 		} catch (JSONException e1) {
@@ -837,6 +865,9 @@ public class Search extends Activity {
 			e1.printStackTrace();
 		}
 
+		Toast.makeText(ctx, "for exit",
+				Toast.LENGTH_SHORT).show();
+		
 		if (cards.isEmpty()) {
 			tv.setVisibility(View.VISIBLE);
 			listView.setVisibility(View.GONE);
@@ -881,6 +912,7 @@ public class Search extends Activity {
 
 				} catch (Exception e) {
 					// Oops
+					e.printStackTrace();
 					Toast.makeText(getBaseContext(), "Ooops" + e.getMessage(),
 							Toast.LENGTH_LONG).show();
 				} finally {
@@ -888,6 +920,7 @@ public class Search extends Activity {
 						if (inputStream2 != null)
 							inputStream2.close();
 					} catch (Exception squish) {
+						squish.printStackTrace();
 					}
 				}
 
@@ -955,12 +988,12 @@ public class Search extends Activity {
 					String pass;
 					String name;
 					if (isOld) {
-						pass = Environment.getExternalStorageDirectory()
+						pass = getFilesDir()
 								.getAbsolutePath() + "/IMDbTestApp/";
 						name = "old";
 
 					} else {
-						pass = Environment.getExternalStorageDirectory()
+						pass = getFilesDir()
 								.getAbsolutePath();
 						name = "IMDbTestApp";
 

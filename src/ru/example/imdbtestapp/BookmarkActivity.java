@@ -157,7 +157,7 @@ public Card cardInit (Card card, String headerTitle, final String idmdbid){
 		
 	BitmapFactory.Options options = new BitmapFactory.Options();
 	options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-	Bitmap bitmap = BitmapFactory.decodeFile(Environment.getExternalStorageDirectory()+ "/IMDbTestApp/"+idmdbid+".jpg", options);
+	Bitmap bitmap = BitmapFactory.decodeFile(getFilesDir()+ "/IMDbTestApp/"+idmdbid+".jpg", options);
 	
 	
 	
