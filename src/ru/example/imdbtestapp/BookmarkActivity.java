@@ -15,6 +15,8 @@ import java.util.Set;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import ru.example.imdbtestapp.utils.CardInit;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -23,6 +25,7 @@ import android.content.SharedPreferences.Editor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
@@ -42,6 +45,7 @@ public class BookmarkActivity extends Activity {
 	SharedPreferences starred;
 	Context ctx;
 	Card cardToChange;
+	CardInit ci;
 	
 	@Override
     public void onActivityResult(int requestCode,int  resultCode, Intent data){
@@ -64,9 +68,10 @@ public class BookmarkActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_bookmark);
-		// Show the Up button in the action bar.
+		
 		setupActionBar();
 		ctx = this;
+		ci = new CardInit();
 		starred = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		cards = new ArrayList<Card>();
 		mCardArrayAdapter = new CardArrayAdapter(this, cards);
@@ -74,23 +79,28 @@ public class BookmarkActivity extends Activity {
 		listView.setAdapter(mCardArrayAdapter);
 		listView.setPadding(0, 10, 0, 10);
 		listView.setClipToPadding(false);
+		
+		//get list of bookmarked films
 		Set<String> bookmarks = starred.getStringSet("starred", null);
 		if (bookmarks!=null) {
 			for (String s : starred.getStringSet("starred", null)) {
 				String JsonString = starred.getString(s, null);
 				if (JsonString != null) {
 					try {
+						//get info from JSON
 						JSONObject jObject;
 						jObject = new JSONObject(JsonString);
 						Card newCard = new Card(getBaseContext());
 						final String imdbid = jObject.getString("imdbID");
 						final String title = jObject.getString("Title");
-						cardInit(newCard, title, imdbid);
+						ArrayList<AsyncTask> asyncTasks = new ArrayList<AsyncTask>();
+						//init card
+						ci.cardInit(newCard, title, imdbid, true, ctx, starred, asyncTasks);
 						CardExpand cardex = new CardExpand(ctx);
 						cardex.setTitle(JsonString);
 						newCard.addCardExpand(cardex);
 						final String JsonToIntent = JsonString;
-						//newCard.getCardThumbnail().setDrawableResource(R.drawable.ic_launcher);
+						//setting up full info
 						newCard.setTitle(jObject.getString("Country") + " | "
 								+ jObject.getString("Year") + "\n"
 								+ jObject.getString("Plot"));
@@ -151,137 +161,5 @@ public class BookmarkActivity extends Activity {
 		}
 		return super.onOptionsItemSelected(item);
 	}
-
-	
-public Card cardInit (Card card, String headerTitle, final String idmdbid){
-		
-	BitmapFactory.Options options = new BitmapFactory.Options();
-	options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-	Bitmap bitmap = BitmapFactory.decodeFile(getFilesDir()+ "/IMDbTestApp/"+idmdbid+".jpg", options);
-	
-	
-	
-	
-		
-		CardHeader header = new CardHeader(getBaseContext());
-		MyThumbnail thumb = new MyThumbnail(getBaseContext(),bitmap);
-		thumb.setExternalUsage(true);
-		
-		
-		
-		
-		card.setId(idmdbid);
-		header.setId(idmdbid);
-		header.setButtonOverflowVisible(true);
-		header.setTitle(headerTitle);
-		//thumb.setDrawableResource(R.drawable.ic_launcher);
-		
-		
-		header.setPopupMenu(R.menu.cardmenu,
-				new CardHeader.OnClickCardHeaderPopupMenuListener() {
-			
-					@Override
-					public void onMenuItemClick(BaseCard cardm, MenuItem item) {
-						switch(item.getItemId()){
-						case R.id.cardmenubookmark:
-							
-							cardm.getParentCard().getCardView().setStarred(!cardm.getParentCard().isStarred());
-							cardm.getParentCard().setStarred(!cardm.getParentCard().isStarred());
-							if(cardm.getParentCard().isStarred()){
-								Set<String> ss = starred.getStringSet("starred", null);
-								Set<String> newList = new HashSet<String>();
-								if (cardm.getParentCard().getId() != ""){ 
-								    if (ss != null){
-								        for(String each: ss){
-								            newList.add(each);
-								        }
-								    }
-								    newList.add(cardm.getParentCard().getId());
-								    Editor ed = starred.edit();
-								    ed.putStringSet("starred", newList);     
-								    ed.apply();
-								    
-								}
-								
-							} else{
-								Set<String> ss = starred.getStringSet("starred", new HashSet<String>());
-								Set<String> newList = new HashSet<String>();
-								if (cardm.getParentCard().getId() != ""){ 
-								    if (ss != null){
-								        for(String each: ss){
-								        	
-								        		newList.add(each);
-								        	
-								            
-								        }
-								    }
-								    newList.remove(cardm.getParentCard().getId());
-								    Editor ed = starred.edit();
-								    ed.putStringSet("starred", newList);  
-								    ed.putString(cardm.getParentCard().getId(), null);
-								    ed.apply();   
-								    Toast.makeText(ctx, "Bookmark deleted", Toast.LENGTH_LONG).show();
-								}
-							}
-							
-						break;
-						case R.id.cardmenushare:
-							Intent sendIntent = new Intent();
-							sendIntent.setAction(Intent.ACTION_SEND);
-							sendIntent.putExtra(Intent.EXTRA_TEXT, "http://www.imdb.com/title/"+cardm.getParentCard().getId()+"/");
-							sendIntent.setType("text/plain");
-							startActivity(sendIntent);
-							break;
-						case R.id.cardmenuopeninbrowser:
-							String url = "http://www.imdb.com/title/"+idmdbid+"/";
-							Intent oib = new Intent(Intent.ACTION_VIEW);
-							oib.setData(Uri.parse(url));
-							startActivity(oib);
-							
-							break;
-						}
-						
-					}
-				});
-		
-		card.addCardHeader(header);
-		card.addCardThumbnail(thumb);
-		
-		card.setClickable(true);
-	
-		card.setOnClickListener(new Card.OnCardClickListener() {
-			@Override
-			public void onClick(Card card, View v) {
-			}
-		});
-		return card;
-		
-	}
-
-public class MyThumbnail extends CardThumbnail {
-	ImageView image;
-	Bitmap bitmap2;
-	public  MyThumbnail(Context context,Bitmap bitmap) {
-        super(context);
-        bitmap2 = bitmap;
-    }
-    @Override
-    public void setupInnerViewElements(ViewGroup parent, View viewImage) {
-    	image= (ImageView)viewImage ;
-    	if(image!=null&&bitmap2!=null){
-    		image.setImageBitmap(bitmap2);
-    	}
-        
-
-    
-    }
-    
-    public void setImageBMP(Bitmap bitmap){
-    	if(image!=null){
-    		image.setImageBitmap(bitmap);
-    	}
-    	
-    }
-}
 
 }

@@ -39,6 +39,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import ru.example.imdbtestapp.utils.BmpSaver;
+import ru.example.imdbtestapp.utils.CardInit;
+
 import android.app.Activity;
 import android.app.Dialog;
 import android.app.ProgressDialog;
@@ -99,14 +102,22 @@ public class Search extends Activity {
 	ArrayList<AsyncTask> asyncTasks;
 	int lastMore;
 	boolean taskCnceled;
-	
+	String serverSay;
+	final String TAG = "tag";
+	String Response;
+	private static final int PROGRESS_DLG_ID = 1;
+	CardInit ci;
+	BmpSaver bs= new BmpSaver(); 
 
+	//Init&setUp old search results
+	//////////////////////////////
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_search);
 		handleIntent(getIntent());
 		taskCnceled = false;
+		ci = new CardInit();
 		starred = PreferenceManager
 				.getDefaultSharedPreferences(getApplicationContext());
 		tv = (TextView) findViewById(R.id.tv);
@@ -127,7 +138,7 @@ public class Search extends Activity {
 				.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(
 				R.layout.listviewfooter, null, false);
 		footerView.setOnClickListener(new OnClickListener() {
-
+			//set up load on footer click
 			@Override
 			public void onClick(View v) {
 				if (isOnline()) {
@@ -154,7 +165,7 @@ public class Search extends Activity {
 		listViewOld.setClipToPadding(false);
 
 		listView.setVisibility(View.GONE);
-
+		//set up auto load on last card on screen
 		listView.setOnScrollListener(new OnScrollListener() {
 			// useless here, skip!
 			@Override
@@ -165,10 +176,10 @@ public class Search extends Activity {
 			@Override
 			public void onScroll(AbsListView view, int firstVisibleItem,
 					int visibleItemCount, int totalItemCount) {
-				// what is the bottom iten that is visible
+				// what is the bottom item that is visible
 				int lastInScreen = firstVisibleItem + visibleItemCount;
-				// is the bottom item visible & not loading more already ? Load
-				// more !
+				// is the bottom item visible & not loading more already ? Load more !
+				
 				if ((lastInScreen == totalItemCount && !nowLoading)) {
 					if (!lbc.isChecked()) {
 
@@ -184,6 +195,8 @@ public class Search extends Activity {
 				}
 			}
 		});
+		
+		//If we got old search result, add it!
 		Set<String> ss = starred.getStringSet("old", null);
 		if (ss != null) {
 
@@ -197,7 +210,9 @@ public class Search extends Activity {
 						Card newCard = new Card(getBaseContext());
 						final String imdbid = jObject.getString("imdbID");
 						final String title = jObject.getString("Title");
-						cardInit(newCard, title, imdbid, true);
+						
+						ci.cardInit(newCard, title, imdbid, true, ctx, starred, asyncTasks);
+						asyncTasks = ci.getAsynkTasks();
 						CardExpand cardex = new CardExpand(ctx);
 						cardex.setTitle(JsonString);
 						newCard.addCardExpand(cardex);
@@ -210,8 +225,7 @@ public class Search extends Activity {
 						Set<String> ss1 = starred.getStringSet("starred",
 								new HashSet<String>());
 						if (ss1.contains(imdbid)) {
-							// Toast.makeText(ctx, "" , Toast.LENGTH_SHORT).show();
-							// newCard.getCardView().setStarred(true);
+							
 							newCard.setStarred(true);
 						}
 						
@@ -226,11 +240,9 @@ public class Search extends Activity {
 								onldintent.putExtra("isstarred", false);								
 								onldintent.putExtra("JSONString", JsonToIntent);
 								cardToChange = card;
-								// ctx.startActivity (intent);
+								
 								startActivityForResult(onldintent, 1);
-								// Toast.makeText(ctx,
-								// onldintent.getStringExtra("imdbid"),
-								// Toast.LENGTH_SHORT).show();
+								
 							}
 						});
 
@@ -241,13 +253,15 @@ public class Search extends Activity {
 					}
 
 					oldCardArrayAdapter.notifyDataSetChanged();
-					// listViewOld.setVisibility(View.VISIBLE);
+					
 				}
 			}
 		}
 
 	}
 
+	//Here we peek up query & init search
+	///////////////////////
 	private void handleIntent(Intent intent) {
 		
 		if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
@@ -255,6 +269,7 @@ public class Search extends Activity {
 			if (isOnline()) {
 				query = intent.getStringExtra(SearchManager.QUERY);
 				if (!containsIllegals(query)) {
+					//Fixing query
 					query = intent.getStringExtra(SearchManager.QUERY);
 					query = query.replaceAll(" ", "%20");
 					query = query + "*";
@@ -267,6 +282,8 @@ public class Search extends Activity {
 					listViewOld.setVisibility(View.GONE);
 					tv.setVisibility(View.INVISIBLE);
 					listView.setVisibility(View.GONE);
+					//Canceling old async tasks
+					
 					if (asyncTasks!=null) {
 						for (AsyncTask atClose : asyncTasks) {
 							if (atClose != null) {
@@ -274,14 +291,18 @@ public class Search extends Activity {
 								
 							}
 						}
+						asyncTasks.clear();
 					}
 					
 					nowLoading = true;
+					
+					//Clear list of last search
 					Set<String> newList = new HashSet<String>();
 					newList.clear();
 					Editor ed = starred.edit();
 					ed.putStringSet("old", newList);
 					ed.apply();
+					//Clear last search pictures
 					File dir = new File(
 							getFilesDir()
 									+ "/IMDbTestApp/old");
@@ -291,9 +312,9 @@ public class Search extends Activity {
 							new File(dir, children[i]).delete();
 						}
 					}
-					
+					//check if tk is not started at the moment (double start on Handle intent fix)
 					if (tk==null) {
-						tk = new TestConnection()
+						tk = new LoadFilmIds()
 								.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 						
 					}
@@ -313,10 +334,12 @@ public class Search extends Activity {
 		handleIntent(intent);
 		
 	}
-
+	
+	//Common stuff
+	/////////////
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
+		
 		getMenuInflater().inflate(R.menu.search, menu);
 		MenuItem searchViewItem = menu.findItem(R.id.search);
 		SearchView searchView2 = (SearchView) searchViewItem.getActionView();
@@ -324,6 +347,7 @@ public class Search extends Activity {
 		SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
 		searchView = (SearchView) menu.findItem(R.id.search).getActionView();
 		searchView2.setIconifiedByDefault(false);
+		//Set search widget size 
 		Display display = getWindowManager().getDefaultDisplay();
 		Point size = new Point();
 		display.getSize(size);
@@ -380,7 +404,7 @@ public class Search extends Activity {
 			progress.setOnCancelListener(new DialogInterface.OnCancelListener() {
 				public void onCancel(DialogInterface dialog) {
 					tk.cancel(true);
-					// finish();
+					
 				}
 			});
 
@@ -392,18 +416,31 @@ public class Search extends Activity {
 
 	}
 
-	String serverSay;
-	final String TAG = "tag";
-	String Response;
-	private static final int PROGRESS_DLG_ID = 1;
+	@Override
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		switch (resultCode) {
+		case RESULT_OK:
+			//Fix starred status
+			cardToChange.setStarred(data.getBooleanExtra("isstarred", false));
+			mCardArrayAdapter.notifyDataSetChanged();
+			oldCardArrayAdapter.notifyDataSetChanged();
+			break;
 
-	class TestConnection extends AsyncTask<String, Void, String> {
+		case RESULT_CANCELED:
+			// do nothing
+			break;
+		}
+	}
+
+	//Load&SetUp Card
+	/////////////////
+	class LoadFilmIds extends AsyncTask<String, Void, String> {
 
 		@Override
 		protected String doInBackground(String... params) {
 		publishProgress(new Void[] {});
 		
-		
+		//Set timeout for 7 sec.
 		HttpParams httpParams = new BasicHttpParams();
 		HttpConnectionParams.setConnectionTimeout(httpParams, 7000);
 		HttpConnectionParams.setSoTimeout(httpParams, 7000);
@@ -412,7 +449,7 @@ public class Search extends Activity {
 			
 			HttpPost httppost = new HttpPost("http://www.omdbapi.com/?s="
 					+ query + "*");
-			// Depends on your web service
+			
 			httppost.setHeader("Content-type", "application/json");
 
 			InputStream inputStream = null;
@@ -424,7 +461,7 @@ public class Search extends Activity {
 				HttpEntity entity = response.getEntity();
 				
 				inputStream = entity.getContent();
-				// json is UTF-8 by default
+				 
 				BufferedReader reader = new BufferedReader(
 						new InputStreamReader(inputStream, "UTF-8"), 8);
 				StringBuilder sb = new StringBuilder();
@@ -437,9 +474,10 @@ public class Search extends Activity {
 
 			} catch (Exception e) {
 				e.printStackTrace();
+				//Timeout - cancel
 				this.cancel(true);
 				taskCnceled = true;
-				//Toast.makeText(ctx, "Connection time out", Toast.LENGTH_LONG).show();
+				
 			} 
 			finally {
 				try {
@@ -468,12 +506,12 @@ public class Search extends Activity {
 			super.onPostExecute(result);
 
 			dismissDialog(PROGRESS_DLG_ID);
-
+			//Added card count to -1
 			lastAdded = -1;
 			if (isOnline()) {
-				//Strange bug - this part called 2 times
-				loadSet();
 				
+				loadSet();
+				//Let know, that tk is not running any more
 				tk=null;
 			} else {
 				Toast.makeText(ctx, "Cant't load data. Offline.",
@@ -492,6 +530,7 @@ public class Search extends Activity {
 	
 		  
 		  private void handleOnCancelled(Boolean result) {
+			  //hide keyboard
 			  searchView.clearFocus();
 			  if (taskCnceled) {
 				Toast.makeText(ctx, "Cant't load data. Connection time out.",
@@ -499,167 +538,110 @@ public class Search extends Activity {
 				taskCnceled=false;
 			}
 			dismissDialog(PROGRESS_DLG_ID);
+			//Let know, that tk is not running any more
 			  tk=null;
 		  }
 
 	}
 
-	static String convertStreamToString(java.io.InputStream is) {
-		java.util.Scanner s = new java.util.Scanner(is).useDelimiter("\\A");
-		return s.hasNext() ? s.next() : "";
-	}
+	public void loadSet() {
+		try {
+			//load set of new cards from ids list
+			JSONObject jObject;
 
-	public Card cardInit(Card card, String headerTitle, final String idmdbid, boolean initOld) {
+			jObject = new JSONObject(resultJSON);
 
-		CardHeader header = new CardHeader(getBaseContext());
-		
-		CardThumbnail thumb = new CardThumbnail(getBaseContext());
-		
-		if(initOld){
-			BitmapFactory.Options options = new BitmapFactory.Options();
-			options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-			Bitmap bitmap = BitmapFactory.decodeFile(getFilesDir()+ "/IMDbTestApp/old/"+idmdbid+".jpg", options);
+			JSONArray jArray = jObject.getJSONArray("Search");
+			lastMore = lastAdded + 1;
 			
-			thumb = new MyThumbnail(getBaseContext(),bitmap);
-			thumb.setExternalUsage(true);
-		} 
-		
-		
-		
-		card.setId(idmdbid);
-		header.setId(idmdbid);
-		header.setButtonOverflowVisible(true);
-		header.setTitle(headerTitle);
-		// thumb.setDrawableResource(R.drawable.ic_launcher);
+			for (int i = lastMore; i < jArray.length() & (i - lastMore) < 3; i++) {
+				try {
+					
+					JSONObject oneObject = jArray.getJSONObject(i);
+					// Pulling items from the array
+					final String title = oneObject.getString("Title");
+					final String imdbid = oneObject.getString("imdbID");
 
-		header.setPopupMenu(R.menu.cardmenu,
-				new CardHeader.OnClickCardHeaderPopupMenuListener() {
+					Card newCard = new Card(getBaseContext());
+					newCard = ci.cardInit(newCard, title, imdbid, false, ctx, starred, asyncTasks);
+					asyncTasks = ci.getAsynkTasks();
+					CardExpand cardex = new CardExpand(ctx);
+					cardex.setTitle("");
+					newCard.addCardExpand(cardex);
+					newCard.setOnClickListener(new Card.OnCardClickListener() {
+						@Override
+						public void onClick(Card card, View view) {
 
-					@Override
-					public void onMenuItemClick(BaseCard cardm, MenuItem item) {
-						switch (item.getItemId()) {
-						case R.id.cardmenubookmark:
+							Intent intent = new Intent(ctx, FilmActivity.class);
+							intent.putExtra("imdbid", imdbid);
+							intent.putExtra("Title", title);
+							intent.putExtra("isstarred", card.isStarred());
+							intent.putExtra("JSONString", card.getCardExpand().getTitle());
+							cardToChange = card;
+						
+							startActivityForResult(intent, 1);
+						}
+					});
+				
+					cards.add(newCard);
 
-							cardm.getParentCard()
-									.getCardView()
-									.setStarred(
-											!cardm.getParentCard().isStarred());
-							cardm.getParentCard().setStarred(
-									!cardm.getParentCard().isStarred());
-							if (cardm.getParentCard().isStarred()) {
-								Set<String> ss = starred.getStringSet(
-										"starred", null);
-								Set<String> newList = new HashSet<String>();
-								if (cardm.getParentCard().getId() != "") {
-									if (ss != null) {
-										for (String each : ss) {
-											newList.add(each);
-										}
-									}
-									newList.add(cardm.getParentCard().getId());
-									Editor ed = starred.edit();
-									ed.putStringSet("starred", newList);
-									ed.apply();
-									if (isOnline()) {
-										getFullFilmInfoJsonString(cardm
-												.getParentCard().getId());
-									} else {
-									/*	Toast.makeText(ctx,
-												"Cant't load data. Offline.",
-												Toast.LENGTH_SHORT).show();
-										*/
-									//Save JSON string
-										ed.putString(cardm.getParentCard().getId(), cardm.getParentCard().getCardExpand().getTitle());
-										ed.apply();
-									// Copy poster		
-										
-										String passto = getFilesDir().getAbsolutePath()+ "/IMDbTestApp";
-										String passfrom = getFilesDir().getAbsolutePath()+ "/IMDbTestApp/old";
-										File from = new File(passfrom, cardm.getParentCard().getId() + ".jpg");
-										File to = new File(passto, cardm.getParentCard().getId() + ".jpg");
-																
-										try {
-											to.createNewFile();
-											InputStream in = new FileInputStream(from);
-										    OutputStream out = new FileOutputStream(to);
+					mCardArrayAdapter.notifyDataSetChanged();
+					Set<String> ss = starred.getStringSet("starred",
+							new HashSet<String>());
+					if (ss.contains(imdbid)) {
+					
+					
+						newCard.setStarred(true);
+					}
+					if (isOnline()) {
+						setFullFilmInfo(newCard, imdbid);
+					} else {
+						Toast.makeText(ctx, "Cant't load data. Offline.",
+								Toast.LENGTH_SHORT).show();
+					}
+					
+					lastAdded = i;
+					
+					if (lastAdded + 1 >= jArray.length()) {
+						//It was last card, remove footer
+						listView.removeFooterView(footerView);
 
-										    // Transfer bytes from in to out
-										    byte[] buf = new byte[1024];
-										    int len;
-										    while ((len = in.read(buf)) > 0) {
-										        out.write(buf, 0, len);
-										    }
-										    in.close();
-										    out.close();
-										} catch (IOException e) {
-											// TODO Auto-generated catch block
-											e.printStackTrace();
-										}
-									}
-
-								}
-
-							} else {
-								Set<String> ss = starred.getStringSet(
-										"starred", new HashSet<String>());
-								Set<String> newList = new HashSet<String>();
-								if (cardm.getParentCard().getId() != "") {
-									if (ss != null) {
-										for (String each : ss) {
-											if (each != cardm.getParentCard()
-													.getId()) {
-												newList.add(each);
-											}
-
-										}
-									}
-									newList.remove(cardm.getParentCard()
-											.getId());
-									Editor ed = starred.edit();
-									ed.putStringSet("starred", newList);
-									ed.putString(cardm.getParentCard().getId(),
-											null);
-									ed.apply();
-								}
-							}
-
-							break;
-						case R.id.cardmenushare:
-							Intent sendIntent = new Intent();
-							sendIntent.setAction(Intent.ACTION_SEND);
-							sendIntent.putExtra(Intent.EXTRA_TEXT,
-									"http://www.imdb.com/title/" + idmdbid
-											+ "/");
-							sendIntent.setType("text/plain");
-							startActivity(sendIntent);
-						break;
-
-						case R.id.cardmenuopeninbrowser:
-							String url = "http://www.imdb.com/title/" + idmdbid
-									+ "/";
-							Intent oib = new Intent(Intent.ACTION_VIEW);
-							oib.setData(Uri.parse(url));
-							startActivity(oib);
-
-							break;
+						Card newCard2 = new Card(getBaseContext());
+						newCard2 = ci.cardInit(newCard2, title, imdbid, false, ctx, starred, asyncTasks);
+						asyncTasks= ci.getAsynkTasks();
+						CardExpand card2ex = new CardExpand(ctx);
+						newCard2.addCardExpand(card2ex);
+						if (isOnline()) {
+							setFullFilmInfo(newCard2, imdbid);
+						} else {
+							Toast.makeText(ctx, "Cant't load data. Offline.",
+									Toast.LENGTH_SHORT).show();
 						}
 
+					
+					
 					}
-				});
-			
-		card.addCardHeader(header);
-		card.addCardThumbnail(thumb);
-		card.setClickable(true);
-		// Set onClick listener
-		card.setOnClickListener(new Card.OnCardClickListener() {
-			@Override
-			public void onClick(Card card, View v) {
+				} catch (JSONException e) {
+					// Oops
+					e.printStackTrace();
+				}
 			}
-		});
-		return card;
+		} catch (JSONException e1) {
+		
+		
+			e1.printStackTrace();
+		}
+
+		if (cards.isEmpty()) {
+			tv.setVisibility(View.VISIBLE);
+			listView.setVisibility(View.GONE);
+		} else {
+			tv.setVisibility(View.INVISIBLE);
+			listView.setVisibility(View.VISIBLE);
+		}
 
 	}
-
+	
 	void setFullFilmInfo(final Card card, final String imdbid) {
 		nowLoading = true;
 		class Actsff extends AsyncTask<String, Void, String> {
@@ -671,9 +653,7 @@ public class Search extends Activity {
 				HttpClient httpclient2 = new DefaultHttpClient();
 				HttpPost httppost2 = new HttpPost("http://www.omdbapi.com/?i="
 						+ imdbid);
-				// Depends on your web service
-				// httppost2.setHeader("Content-type", "application/json");
-
+				
 				InputStream inputStream2 = null;
 
 				try {
@@ -715,11 +695,12 @@ public class Search extends Activity {
 
 				if (result2!=null) {
 					try {
+						//Set info  from Json to card
 						final JSONObject jObject2 = new JSONObject(result2);
 						card.setTitle(jObject2.getString("Country") + " | "
 								+ jObject2.getString("Year") + "\n"
 								+ jObject2.getString("Plot"));
-						// card.getCardThumbnail().setExternalUsage(true);
+					
 						card.getCardThumbnail().setUrlResource(
 								jObject2.getString("Poster"));
 						card.getCardExpand().setTitle(result2);
@@ -739,14 +720,13 @@ public class Search extends Activity {
 
 						}
 
-						SaveBmp(jObject2.getString("Poster"), imdbid, true);
-
-						// setPoster(card, jObject2.getString("Poster"));
-						// card.getCardThumbnail().setDrawableResource(R.drawable.ic_launcher)
+						bs.SaveBmp(jObject2.getString("Poster"), imdbid, true, ctx, asyncTasks);
+						asyncTasks = bs.getAsynkTasks();
+						
 						mCardArrayAdapter.notifyDataSetChanged();
-						// card.getCardHeader().setTitle(jObject2.getString("Plot"));
+						
 					} catch (JSONException e) {
-						// TODO Auto-generated catch block
+						
 						e.printStackTrace();
 					}
 				}
@@ -755,278 +735,13 @@ public class Search extends Activity {
 		}
 		;
 		
-		
+		//Add task to list for canceling
  		asyncTasks.add(new Actsff().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR));
 
 	}
 
-	@Override
-	public void onActivityResult(int requestCode, int resultCode, Intent data) {
-		switch (resultCode) {
-		case RESULT_OK:
-
-			cardToChange.setStarred(data.getBooleanExtra("isstarred", false));
-			mCardArrayAdapter.notifyDataSetChanged();
-			oldCardArrayAdapter.notifyDataSetChanged();
-			break;
-
-		case RESULT_CANCELED:
-			// do nothing
-			break;
-		}
-	}
-
-	public void loadSet() {
-		try {
-
-			JSONObject jObject;
-
-			jObject = new JSONObject(resultJSON);
-
-			JSONArray jArray = jObject.getJSONArray("Search");
-			lastMore = lastAdded + 1;
-			int iCheck=lastMore;
-			for (int i = lastMore; i < jArray.length() & (i - lastMore) < 3; i++) {
-				try {
-					
-					JSONObject oneObject = jArray.getJSONObject(i);
-					// Pulling items from the array
-					final String title = oneObject.getString("Title");
-					final String imdbid = oneObject.getString("imdbID");
-
-					Card newCard = new Card(getBaseContext());
-					newCard = cardInit(newCard, title, imdbid, false);
-					CardExpand cardex = new CardExpand(ctx);
-					cardex.setTitle("");
-					newCard.addCardExpand(cardex);
-					newCard.setOnClickListener(new Card.OnCardClickListener() {
-						@Override
-						public void onClick(Card card, View view) {
-
-							Intent intent = new Intent(ctx, FilmActivity.class);
-							intent.putExtra("imdbid", imdbid);
-							intent.putExtra("Title", title);
-							intent.putExtra("isstarred", card.isStarred());
-							intent.putExtra("JSONString", card.getCardExpand().getTitle());
-							cardToChange = card;
-						
-							startActivityForResult(intent, 1);
-						}
-					});
-				
-					cards.add(newCard);
-
-					mCardArrayAdapter.notifyDataSetChanged();
-					Set<String> ss = starred.getStringSet("starred",
-							new HashSet<String>());
-					if (ss.contains(imdbid)) {
-					
-					
-						newCard.setStarred(true);
-					}
-					if (isOnline()) {
-						setFullFilmInfo(newCard, imdbid);
-					} else {
-						Toast.makeText(ctx, "Cant't load data. Offline.",
-								Toast.LENGTH_SHORT).show();
-					}
-					
-					lastAdded = i;
-
-					if (lastAdded + 1 >= jArray.length()) {
-						listView.removeFooterView(footerView);
-
-						Card newCard2 = new Card(getBaseContext());
-						newCard2 = cardInit(newCard2, title, imdbid, false);
-						CardExpand card2ex = new CardExpand(ctx);
-						newCard2.addCardExpand(card2ex);
-						if (isOnline()) {
-							setFullFilmInfo(newCard2, imdbid);
-						} else {
-							Toast.makeText(ctx, "Cant't load data. Offline.",
-									Toast.LENGTH_SHORT).show();
-						}
-
-					
-					
-					}
-				} catch (JSONException e) {
-					// Oops
-					e.printStackTrace();
-				}
-			}
-		} catch (JSONException e1) {
-		
-		
-			e1.printStackTrace();
-		}
-
-		if (cards.isEmpty()) {
-			tv.setVisibility(View.VISIBLE);
-			listView.setVisibility(View.GONE);
-		} else {
-			tv.setVisibility(View.INVISIBLE);
-			listView.setVisibility(View.VISIBLE);
-		}
-
-	}
-
-	void getFullFilmInfoJsonString(final String imdbid) {
-		nowLoading = true;
-		class Act extends AsyncTask<String, Void, String> {
-			String result2 = null;
-
-			@Override
-			protected String doInBackground(String... params) {
-				nowLoading = true;
-				HttpClient httpclient2 = new DefaultHttpClient();
-				HttpPost httppost2 = new HttpPost("http://www.omdbapi.com/?i="
-						+ imdbid);
-			
-			
-				InputStream inputStream2 = null;
-
-				try {
-					HttpResponse response2 = httpclient2.execute(httppost2);
-					HttpEntity entity2 = response2.getEntity();
-
-					inputStream2 = entity2.getContent();
-				
-				
-					BufferedReader reader2 = new BufferedReader(
-							new InputStreamReader(inputStream2, "UTF-8"), 8);
-					StringBuilder sb2 = new StringBuilder();
-
-					String line2 = null;
-					while ((line2 = reader2.readLine()) != null) {
-						sb2.append(line2 + "\n");
-					}
-					result2 = sb2.toString();
-
-				} catch (Exception e) {
-					// Oops
-					e.printStackTrace();
-					
-				} finally {
-					try {
-						if (inputStream2 != null)
-							inputStream2.close();
-					} catch (Exception squish) {
-						squish.printStackTrace();
-					}
-				}
-
-				return null;
-			}
-
-			protected void onPostExecute(String result) {
-
-				Editor ed = starred.edit();
-				ed.putString(imdbid, result2);
-				ed.apply();
-
-				JSONObject json;
-				try {
-					json = new JSONObject(result2);
-					String url = json.getString("Poster");
-					SaveBmp(url, imdbid, false);
-				} catch (JSONException e) {
-					
-					
-					e.printStackTrace();
-				}
-
-			};
-		}
-		;
-		
-		asyncTasks.add(new Act().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR));
-		
-
-	}
-
-	public void SaveBmp(final String url, final String id, final boolean isOld) {
-
-		class SaveBmp extends AsyncTask<String, Void, String> {
-			Bitmap bitmap;
-
-			@Override
-			protected String doInBackground(String... params) {
-				URL imageurl;
-				try {
-					imageurl = new URL(url);
-
-					try {
-						bitmap = BitmapFactory.decodeStream(imageurl
-								.openConnection().getInputStream());
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-				} catch (MalformedURLException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
-				return null;
-			}
-
-			@Override
-			protected void onPostExecute(String result) {
-				ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-				if (bitmap!=null) {
-					bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
-					
-					
-					String pass;
-					String name;
-					if (isOld) {
-						pass = getFilesDir()
-								.getAbsolutePath() + "/IMDbTestApp/";
-						name = "old";
-
-					} else {
-						pass = getFilesDir()
-								.getAbsolutePath();
-						name = "IMDbTestApp";
-
-					}
-					File exportDir = new File(pass, name);
-					if (!exportDir.exists()) {
-						exportDir.mkdirs();
-					}
-					File f = new File(exportDir, id + ".jpg");
-					try {
-						f.createNewFile();
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					
-					FileOutputStream fo;
-					try {
-						fo = new FileOutputStream(f);
-
-						fo.write(bytes.toByteArray());
-
-					
-					
-						fo.close();
-					} catch (FileNotFoundException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-				}
-			}
-		}
-		
-		asyncTasks.add(new SaveBmp().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR));
-		
-		
-	}
-
+	//Usefull stuff
+	///////////////
 	public boolean isOnline() {
 		ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 		NetworkInfo netInfo = cm.getActiveNetworkInfo();
@@ -1036,36 +751,15 @@ public class Search extends Activity {
 		return false;
 	}
 	
-	public class MyThumbnail extends CardThumbnail {
-		ImageView image;
-		Bitmap bitmap2;
-		public  MyThumbnail(Context context,Bitmap bitmap) {
-	        super(context);
-	        bitmap2 = bitmap;
-	    }
-	    @Override
-	    public void setupInnerViewElements(ViewGroup parent, View viewImage) {
-	    	image= (ImageView)viewImage ;
-	    	if(image!=null&&bitmap2!=null){
-	    		image.setImageBitmap(bitmap2);
-	    	}
-	        
-
-	    
-	    }
-	    
-	    public void setImageBMP(Bitmap bitmap){
-	    	if(image!=null){
-	    		image.setImageBitmap(bitmap);
-	    	}
-	    	
-	    }
-	}
-	
 	public boolean containsIllegals(String toExamine) {
 	    Pattern pattern = Pattern.compile("[~#@*%+{}<>\\[\\]|\"\\_^\\\\]");
 	    Matcher matcher = pattern.matcher(toExamine);
 	    return matcher.find();
+	}
+
+	static String convertStreamToString(java.io.InputStream is) {
+		java.util.Scanner s = new java.util.Scanner(is).useDelimiter("\\A");
+		return s.hasNext() ? s.next() : "";
 	}
 
 }

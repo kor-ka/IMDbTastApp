@@ -27,6 +27,8 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import ru.example.imdbtestapp.utils.BmpSaver;
+
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -71,13 +73,15 @@ public class FilmActivity extends Activity implements OnClickListener {
 	Intent result;
 	Context ctx;
 	Intent i;
+	BmpSaver bs;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_film);
-		// Show the Up button in the action bar.
+		
 		setupActionBar();
+		bs = new BmpSaver();
 		ctx = this;
 		starred = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 		stuff = (TextView) findViewById(R.id.afStuff);
@@ -99,6 +103,7 @@ public class FilmActivity extends Activity implements OnClickListener {
 		setResult(RESULT_OK, result);
 		
 		if(istarred){
+			//If starred, trying to get film info from offline
 			try {
 				if(starred.getString(imdbid, null)!=null){
 					
@@ -140,11 +145,13 @@ public class FilmActivity extends Activity implements OnClickListener {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			
 		}else{
 			if(isOnline()){
+				//if not starred&online - load! 
 				setFullFilmInfo(i.getStringExtra("imdbid"));
 			}else{
-				
+				//not starred and offline - it can be old
 				String jsonString = i.getStringExtra("JSONString");
 				if(jsonString!=null){
 					 try {
@@ -183,6 +190,7 @@ public class FilmActivity extends Activity implements OnClickListener {
 						}
 					 
 				}else{
+					//No data - no views)
 					Toast.makeText(ctx, "Cant't load data. Offline.", Toast.LENGTH_SHORT).show();
 					stuff.setVisibility(View.INVISIBLE);
 					stuff2.setVisibility(View.INVISIBLE);
@@ -397,6 +405,7 @@ public class FilmActivity extends Activity implements OnClickListener {
 	public void onClick(View v) {
 		istarred = starred.getString(imdbid, null)!=null;
 		if(istarred){
+			//if is starred - delete from bookmarks
 			Set<String> ss = starred.getStringSet("starred", new HashSet<String>());
 			Set<String> newList = new HashSet<String>();
 			if (imdbid != ""){ 
@@ -422,6 +431,7 @@ public class FilmActivity extends Activity implements OnClickListener {
 			result.putExtra("isstarred", false);
 			setResult(RESULT_OK, result);
 		}else{
+			//if not starred -save 
 			Set<String> ss = starred.getStringSet("starred", null);
 			Set<String> newList = new HashSet<String>();
 			if (imdbid != ""){ 
@@ -442,7 +452,8 @@ public class FilmActivity extends Activity implements OnClickListener {
 			istarred = true;
 			if(isOnline()){
 				getFullFilmInfoJsonString(imdbid);
-			}else{ //Toast.makeText(ctx, "Cant't load data. Offline.", Toast.LENGTH_SHORT).show(); 
+			}else{ //Toast.makeText(ctx, "Cant't load data. Offline.", Toast.LENGTH_SHORT).show();
+				//if offline - save from old
 			Editor ed = starred.edit();
             ed.putString(imdbid, i.getStringExtra("JSONString"));
             ed.apply();
@@ -539,7 +550,7 @@ public class FilmActivity extends Activity implements OnClickListener {
 						try {
 							json = new JSONObject(result2);
 							String url = json.getString("Poster");
-							SaveBmp(url,imdbid);
+						bs.SaveBmp(url,imdbid, false, ctx, null);
 						} catch (JSONException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
@@ -553,71 +564,6 @@ public class FilmActivity extends Activity implements OnClickListener {
 		
 		
 		
-	}
-	
-	public void SaveBmp(final String url, final String id) {
-
-		class SaveBmp extends AsyncTask<String, Void, String> {
-			Bitmap bitmap;
-
-			@Override
-			protected String doInBackground(String... params) {
-				URL imageurl;
-				try {
-					imageurl = new URL(url);
-
-					try {
-						bitmap = BitmapFactory.decodeStream(imageurl
-								.openConnection().getInputStream());
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-				} catch (MalformedURLException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
-				return null;
-			}
-
-			@Override
-			protected void onPostExecute(String result) {
-				ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-				if (bitmap!=null) {
-					bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
-					File exportDir = new File(
-							getFilesDir(),
-							"IMDbTestApp");
-					if (!exportDir.exists()) {
-						exportDir.mkdirs();
-					}
-					File f = new File(exportDir, id + ".jpg");
-					try {
-						f.createNewFile();
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					FileOutputStream fo;
-					try {
-						fo = new FileOutputStream(f);
-
-						fo.write(bytes.toByteArray());
-
-						fo.close();
-					} catch (FileNotFoundException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-				}
-			}
-		}
-		
-		new SaveBmp().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-
 	}
 	
 	public boolean isOnline() {
