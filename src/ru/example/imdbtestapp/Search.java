@@ -98,16 +98,15 @@ public class Search extends Activity {
 	Card cardToChange;
 	ArrayList<AsyncTask> asyncTasks;
 	int lastMore;
-	int tkcount;
-	int handlecount;
+	boolean taskCnceled;
+	
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_search);
 		handleIntent(getIntent());
-		tkcount = 1;
-		handlecount =1;
+		taskCnceled = false;
 		starred = PreferenceManager
 				.getDefaultSharedPreferences(getApplicationContext());
 		tv = (TextView) findViewById(R.id.tv);
@@ -133,8 +132,7 @@ public class Search extends Activity {
 			public void onClick(View v) {
 				if (isOnline()) {
 					loadSet();
-					Toast.makeText(ctx, "LS onClick",
-							Toast.LENGTH_SHORT).show();
+					
 				} else {
 					Toast.makeText(ctx, "Cant't load data. Offline.",
 							Toast.LENGTH_SHORT).show();
@@ -176,8 +174,7 @@ public class Search extends Activity {
 
 						if (isOnline()) {
 							loadSet();
-							Toast.makeText(ctx, "LS auto",
-									Toast.LENGTH_SHORT).show();
+							
 						} else {
 							Toast.makeText(ctx, "Cant't load data. Offline.",
 									Toast.LENGTH_SHORT).show();
@@ -298,9 +295,7 @@ public class Search extends Activity {
 					if (tk==null) {
 						tk = new TestConnection()
 								.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-						Toast.makeText(ctx, "new tk" + tkcount,
-								Toast.LENGTH_LONG).show();
-						tkcount++;
+						
 					}
 					
 				} else { Toast.makeText(ctx, "Please, don't use illegal characters", Toast.LENGTH_LONG).show(); }
@@ -316,8 +311,7 @@ public class Search extends Activity {
 	@Override
 	protected void onNewIntent(Intent intent) {
 		handleIntent(intent);
-		Toast.makeText(ctx, "handle intent"+handlecount, Toast.LENGTH_LONG).show();
-		handlecount++;
+		
 	}
 
 	@Override
@@ -444,6 +438,7 @@ public class Search extends Activity {
 			} catch (Exception e) {
 				e.printStackTrace();
 				this.cancel(true);
+				taskCnceled = true;
 				//Toast.makeText(ctx, "Connection time out", Toast.LENGTH_LONG).show();
 			} 
 			finally {
@@ -478,8 +473,7 @@ public class Search extends Activity {
 			if (isOnline()) {
 				//Strange bug - this part called 2 times
 				loadSet();
-				Toast.makeText(ctx, "LS from tk",
-						Toast.LENGTH_SHORT).show();
+				
 				tk=null;
 			} else {
 				Toast.makeText(ctx, "Cant't load data. Offline.",
@@ -499,9 +493,12 @@ public class Search extends Activity {
 		  
 		  private void handleOnCancelled(Boolean result) {
 			  searchView.clearFocus();
-			  Toast.makeText(ctx, "Cant't load data. Connection time out.",
+			  if (taskCnceled) {
+				Toast.makeText(ctx, "Cant't load data. Connection time out.",
 						Toast.LENGTH_SHORT).show();
-			  dismissDialog(PROGRESS_DLG_ID);
+				taskCnceled=false;
+			}
+			dismissDialog(PROGRESS_DLG_ID);
 			  tk=null;
 		  }
 
@@ -833,8 +830,7 @@ public class Search extends Activity {
 						Toast.makeText(ctx, "Cant't load data. Offline.",
 								Toast.LENGTH_SHORT).show();
 					}
-					Toast.makeText(ctx, "add card "+i,
-							Toast.LENGTH_SHORT).show();
+					
 					lastAdded = i;
 
 					if (lastAdded + 1 >= jArray.length()) {
@@ -865,9 +861,6 @@ public class Search extends Activity {
 			e1.printStackTrace();
 		}
 
-		Toast.makeText(ctx, "for exit",
-				Toast.LENGTH_SHORT).show();
-		
 		if (cards.isEmpty()) {
 			tv.setVisibility(View.VISIBLE);
 			listView.setVisibility(View.GONE);
@@ -913,8 +906,7 @@ public class Search extends Activity {
 				} catch (Exception e) {
 					// Oops
 					e.printStackTrace();
-					Toast.makeText(getBaseContext(), "Ooops" + e.getMessage(),
-							Toast.LENGTH_LONG).show();
+					
 				} finally {
 					try {
 						if (inputStream2 != null)
