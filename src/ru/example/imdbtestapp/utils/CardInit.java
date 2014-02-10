@@ -95,7 +95,7 @@ public class CardInit {
 								Set<String> ss = starred.getStringSet(
 										"starred", null);
 								Set<String> newList = new HashSet<String>();
-								if (cardm.getParentCard().getId() != "") {
+								if (cardm.getParentCard().getId() != null) {
 									if (ss != null) {
 										for (String each : ss) {
 											newList.add(each);
@@ -146,7 +146,7 @@ public class CardInit {
 								Set<String> ss = starred.getStringSet(
 										"starred", new HashSet<String>());
 								Set<String> newList = new HashSet<String>();
-								if (cardm.getParentCard().getId() != "") {
+								if (cardm.getParentCard().getId() != null) {
 									if (ss != null) {
 										for (String each : ss) {
 											if (each != cardm.getParentCard()
