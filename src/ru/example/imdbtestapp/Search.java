@@ -180,7 +180,8 @@ public class Search extends Activity {
 				int lastInScreen = firstVisibleItem + visibleItemCount;
 				// is the bottom item visible & not loading more already ? Load more !
 				
-				if ((lastInScreen == totalItemCount && !nowLoading)) {
+				if ((lastInScreen == /*E pur si muove!*/totalItemCount && !nowLoading)) {
+					 
 					if (!lbc.isChecked()) {
 
 						if (isOnline()) {
