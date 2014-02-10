@@ -708,7 +708,7 @@ public class Search extends Activity {
 						// Add to old
 						Set<String> ss = starred.getStringSet("old", null);
 						Set<String> newList = new HashSet<String>();
-						if (result2 != "") {
+						if (result2 != null) {
 							if (ss != null) {
 								for (String each : ss) {
 									newList.add(each);
